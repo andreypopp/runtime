@@ -3,9 +3,9 @@
     runtime -- application runtime management
     =========================================
 
-    This module provides utilities for managing application runtimes. The
-    :class:`.Context` manages application context on per-application or
-    per-request basis.
+    This module provides a way to manage runtime in Python applicaitons.
+    Basically it allows you to manage some context-local (thread-local and it's
+    also green-friendly) data.
 
     Most of the code borrowed from the ``werkzeug.local`` by the Werkzeug Team.
 
@@ -30,7 +30,15 @@ except ImportError:  # pragma: no cover
 __all__ = ('Context',)
 
 class Context(object):
-    """ Context"""
+    """ Context
+
+    This object manages stack of sets of objects which are related to some
+    lifecycle phase of application. For example, consider WSGI application which
+    needs to co-exists with others analogous WSGI applications in the same
+    process -- so you need to store your application configuration somewhere --
+    you need per-application context for this. Then you also want to store
+    request somewhere -- in per-request context.
+    """
 
     def __init__(self, name=None):
         self.name = name
