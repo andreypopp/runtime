@@ -4,8 +4,6 @@
     =========================================
 
     This module provides a way to manage runtime in Python applicaitons.
-    Basically it allows you to manage some context-local (thread-local and it's
-    also green-friendly) data.
 
     Most of the code borrowed from the ``werkzeug.local`` by the Werkzeug Team.
 
@@ -32,12 +30,8 @@ __all__ = ('Context',)
 class Context(object):
     """ Context
 
-    This object manages stack of sets of objects which are related to some
-    lifecycle phase of application. For example, consider WSGI application which
-    needs to co-exists with others analogous WSGI applications in the same
-    process -- so you need to store your application configuration somewhere --
-    you need per-application context for this. Then you also want to store
-    request somewhere -- in per-request context.
+    This object represents a group of related objects exposed via proxies and
+    allows them to be managed as a stack.
     """
 
     def __init__(self, name=None):
@@ -46,6 +40,7 @@ class Context(object):
         self.proxies = {}
 
     def __getattr__(self, name):
+        """ Construct a new proxy which will be bound at configuration time"""
         if name in self.proxies:
             return self.proxies[name]
 
@@ -74,6 +69,8 @@ class Context(object):
     __repr__ = __str__
 
     def __call__(self, **values):
+        """ Create a new session for context which implements context manager
+        protocol"""
         return Session(self, values)
 
 class Session(object):
