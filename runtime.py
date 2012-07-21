@@ -25,7 +25,9 @@ except ImportError:  # pragma: no cover
     except ImportError:  # pragma: no cover
         from dummy_thread import get_ident
 
-__all__ = ('Context',)
+__all__ = (
+    'Context', 'Local', 'LocalStack', 'Proxy', 'release',
+    'current_object')
 
 class Context(object):
     """ Context
@@ -341,6 +343,10 @@ class Proxy(object):
     __coerce__ = lambda x, o: x.__current_object__().__coerce__(x, o)
     __enter__ = lambda x: x.__current_object__().__enter__()
     __exit__ = lambda x, *a, **kw: x.__current_object__().__exit__(*a, **kw)
+
+def current_object(proxy):
+    """ Return object proxy currently points to"""
+    return proxy.__current_object__()
 
 def release(local):
     """Releases the contents of the local for the current context.
