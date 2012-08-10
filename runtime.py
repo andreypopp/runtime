@@ -43,7 +43,7 @@ class Context(object):
         self.values = LocalStack()
         self.proxies = {}
         self.log = logging.getLogger(
-            'runtime.Context.%s' % self.logging_name or self.name)
+            'runtime.Context.%s' % (logging_name or name,))
 
     def __getattr__(self, name):
         """ Construct a new proxy which will be bound at configuration time"""
