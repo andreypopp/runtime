@@ -14,6 +14,8 @@
 
 """
 
+import logging
+
 # since each thread has its own greenlet we can just use those as identifiers
 # for the context.  If greenlets are not available we fall back to the
 # current thread ident.
@@ -36,10 +38,12 @@ class Context(object):
     allows them to be managed as a stack.
     """
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, logging_name=None):
         self.name = name
         self.values = LocalStack()
         self.proxies = {}
+        self.log = logging.getLogger(
+            'runtime.Context.%s' % self.logging_name or self.name)
 
     def __getattr__(self, name):
         """ Construct a new proxy which will be bound at configuration time"""
@@ -82,10 +86,12 @@ class Session(object):
         self.values = values
 
     def __enter__(self):
+        self.context.log.debug('entering context')
         self.context.values.push(self.values)
         return self
 
     def __exit__(self, *args):
+        self.context.log.debug('exiting context')
         self.context.values.pop()
 
 class Local(object):
