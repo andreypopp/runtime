@@ -38,6 +38,8 @@ class Context(object):
     allows them to be managed as a stack.
     """
 
+    cleanup = None
+
     def __init__(self, name=None, logging_name=None):
         self.name = name
         self.values = LocalStack()
@@ -92,6 +94,8 @@ class Session(object):
 
     def __exit__(self, *args):
         self.context.log.debug('exiting context')
+        if self.context.cleanup:
+            self.context.cleanup()
         self.context.values.pop()
 
 class Local(object):
