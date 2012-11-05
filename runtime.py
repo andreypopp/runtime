@@ -31,6 +31,9 @@ __all__ = (
     'Context', 'Local', 'LocalStack', 'Proxy', 'release',
     'current_object')
 
+class UnboundProxyError(RuntimeError):
+    """ Trying to access an object via an unbound proxy"""
+
 class Context(object):
     """ Context
 
@@ -56,7 +59,7 @@ class Context(object):
             try:
                 return self.values.value[name]
             except (KeyError, AttributeError):
-                raise RuntimeError("object '%s' unbound" % name)
+                raise UnboundProxyError("object '%s' unbound" % name)
 
         proxy = Proxy(_lookup)
         self.proxies[name] = proxy
@@ -65,7 +68,7 @@ class Context(object):
     def __str__(self):
         try:
             self.values.value
-        except RuntimeError:
+        except UnboundProxyError:
             initialized = False
         else:
             initialized = True
@@ -114,7 +117,7 @@ class Local(object):
             try:
                 return getattr(self, proxy)
             except AttributeError:
-                raise RuntimeError("object '%s' unbound" % proxy)
+                raise UnboundProxyError("object '%s' unbound" % proxy)
         return Proxy(_lookup)
 
     def __release__(self):
@@ -208,7 +211,7 @@ class LocalStack(object):
         try:
             return self._local.stack[-1]
         except (AttributeError, IndexError):
-            raise RuntimeError('object unbound')
+            raise UnboundProxyError('object unbound')
 
 class Proxy(object):
     """Acts as a proxy for a werkzeug local.  Forwards all operations to
@@ -232,8 +235,8 @@ class Proxy(object):
         response = _response_local()
 
     Whenever something is bound to l.user / l.request the proxy objects
-    will forward all operations.  If no object is bound a :exc:`RuntimeError`
-    will be raised.
+    will forward all operations.  If no object is bound a
+    :exc:`UnboundProxyError` will be raised.
 
     To create proxies to :class:`Local` or :class:`LocalStack` objects,
     call the object as shown above.  If you want to have a proxy to an
@@ -262,32 +265,32 @@ class Proxy(object):
     def __dict__(self):
         try:
             return self.__current_object__().__dict__
-        except RuntimeError:
+        except UnboundProxyError:
             raise AttributeError('__dict__')
 
     def __repr__(self):
         try:
             obj = self.__current_object__()
-        except RuntimeError:
+        except UnboundProxyError:
             return '<%s unbound>' % self.__class__.__name__
         return repr(obj)
 
     def __nonzero__(self):
         try:
             return bool(self.__current_object__())
-        except RuntimeError:
+        except UnboundProxyError:
             return False
 
     def __unicode__(self):
         try:
             return unicode(self.__current_object__())
-        except RuntimeError:
+        except UnboundProxyError:
             return repr(self)
 
     def __dir__(self):
         try:
             return dir(self.__current_object__())
-        except RuntimeError:
+        except UnboundProxyError:
             return []
 
     def __getattr__(self, name):
