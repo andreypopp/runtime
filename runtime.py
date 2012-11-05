@@ -29,7 +29,7 @@ except ImportError:  # pragma: no cover
 
 __all__ = (
     'Context', 'Local', 'LocalStack', 'Proxy', 'release',
-    'current_object')
+    'current_object', 'is_bound')
 
 class UnboundProxyError(RuntimeError):
     """ Trying to access an object via an unbound proxy"""
@@ -83,6 +83,14 @@ class Context(object):
         """ Create a new session for context which implements context manager
         protocol"""
         return Session(self, values)
+
+    def overlay(self, **values):
+        try:
+            current = dict(self.values.value)
+        except UnboundProxyError:
+            current = {}
+        current.update(values)
+        return Session(self, current)
 
 class Session(object):
 
@@ -360,6 +368,15 @@ class Proxy(object):
 def current_object(proxy):
     """ Return object proxy currently points to"""
     return proxy.__current_object__()
+
+def is_bound(proxy):
+    """ Return ``True`` if ``proxy`` is bound to some value"""
+    try:
+        current_object(proxy)
+    except UnboundProxyError:
+        return False
+    else:
+        return True
 
 def release(local):
     """Releases the contents of the local for the current context.
